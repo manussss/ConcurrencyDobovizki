@@ -1,11 +1,16 @@
 ﻿using System.Diagnostics;
 
+var action1 = new Action(Processo1);
+var action2 = new Action(Processo2);
+var action3 = new Action(Processo3);
+
 var stopWatch = new Stopwatch();
 
 stopWatch.Start();
-Processo1();
-Processo2();
-Processo3();
+
+//reduced from 3017ms to 1014ms
+Parallel.Invoke(action1, action2, action3);
+
 stopWatch.Stop();
 
 Console.WriteLine($"Tempo de processamento: {stopWatch.ElapsedMilliseconds}ms");
