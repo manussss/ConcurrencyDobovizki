@@ -1,34 +1,63 @@
 ﻿using System.Diagnostics;
-
-var action1 = new Action(Processo1);
-var action2 = new Action(Processo2);
-var action3 = new Action(Processo3);
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 var stopWatch = new Stopwatch();
 
+string[] ceps = ["07155081", "15800100", "38407369", "77445100", "78015818"];
+
+var service = new ViaCepService();
+
 stopWatch.Start();
 
-//reduced from 3017ms to 1014ms
-Parallel.Invoke(action1, action2, action3);
+//3033ms
+foreach (var cep in ceps)
+{
+    Console.WriteLine(service.GetCep(cep) + $"Thread: {Thread.CurrentThread.ManagedThreadId}");
+}
 
 stopWatch.Stop();
 
 Console.WriteLine($"Tempo de processamento: {stopWatch.ElapsedMilliseconds}ms");
 
-void Processo1()
+public class CepModel
 {
-    Console.WriteLine($"Processo 1 finalizado. Thread: {Thread.CurrentThread.ManagedThreadId}");
-    Thread.Sleep(1000);
+    [JsonPropertyName("cep")]
+    public string Cep { get; set; }
+    [JsonPropertyName("logradouro")]
+    public string Logradouro { get; set; }
+    [JsonPropertyName("complemento")]
+    public string Complemento { get; set; }
+    [JsonPropertyName("bairro")]
+    public string Bairro { get; set; }
+    [JsonPropertyName("localidade")]        
+    public string Localidade { get; set; }
+    [JsonPropertyName("uf")]
+    public string Uf { get; set; }
+    [JsonPropertyName("ibge")]
+    public string Ibge { get; set; }
+    [JsonPropertyName("gia")]
+    public string Gia { get; set; }
+    [JsonPropertyName("ddd")]
+    public string Ddd { get; set; }
+    [JsonPropertyName("siafi")]
+    public string Siafi { get; set; }
+
+    public override string ToString()
+    {
+        return $"{this.Cep} - {this.Uf} - {this.Bairro} - {this.Localidade}";
+    }
 }
 
-void Processo2()
+public class ViaCepService
 {
-    Console.WriteLine($"Processo 2 finalizado. Thread: {Thread.CurrentThread.ManagedThreadId}");
-    Thread.Sleep(1000);
-}
+    public CepModel GetCep(string cep)
+    {
+        var client = new HttpClient();
+        var response = client.GetAsync($"https://viacep.com.br/ws/{cep}/json/").Result;
+        var content = response.Content.ReadAsStringAsync().Result;
+        var cepResult = JsonSerializer.Deserialize<CepModel>(content);
 
-void Processo3()
-{
-    Console.WriteLine($"Processo 3 finalizado. Thread: {Thread.CurrentThread.ManagedThreadId}");
-    Thread.Sleep(1000);
+        return cepResult;            
+    }
 }
