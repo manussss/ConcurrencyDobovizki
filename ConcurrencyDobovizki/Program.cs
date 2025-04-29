@@ -10,11 +10,13 @@ var service = new ViaCepService();
 
 stopWatch.Start();
 
-//3033ms
-foreach (var cep in ceps)
+//reduced from 3 seconds to 803ms (8 threads), depends on the MaxDegreeOfParallelism
+var parallelOptions = new ParallelOptions();
+parallelOptions.MaxDegreeOfParallelism = 2;
+Parallel.ForEach(ceps, parallelOptions, cep => 
 {
-    Console.WriteLine(service.GetCep(cep) + $"Thread: {Thread.CurrentThread.ManagedThreadId}");
-}
+    Console.WriteLine(service.GetCep(cep) + $" | Thread: {Thread.CurrentThread.ManagedThreadId}");
+});
 
 stopWatch.Stop();
 
